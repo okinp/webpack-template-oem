@@ -2,14 +2,16 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const Fiber = require("fibers");
 const path = require("path");
 
-module.exports = (env, argv) => ({
-  entry: [__dirname + "/index.html", "@babel/polyfill", "./main.js"],
+module.exports = () => ({
+  entry: {
+    main: "./main.js"
+  },
   resolve: {
     alias: {
-      src: path.resolve(__dirname, "src/"),
-      css: path.resolve(__dirname, "assets/css/"),
-      iconfont: path.resolve(__dirname, "assets/fonts/icomoon/"),
-      images: path.resolve(__dirname, "assets/images/")
+      src: path.resolve(__dirname, "./src/"),
+      css: path.resolve(__dirname, "./assets/css/"),
+      iconfont: path.resolve(__dirname, "./assets/fonts/icomoon/"),
+      images: path.resolve(__dirname, "./assets/images/")
     },
     extensions: [".js", ".json", ".css", ".scss"]
   },
@@ -35,22 +37,33 @@ module.exports = (env, argv) => ({
         use: [
           {
             loader:
-              argv.mode !== "production"
+              this.mode !== "production"
                 ? "style-loader"
                 : MiniCssExtractPlugin.loader
           },
           {
             loader: "css-loader", // translates CSS into CommonJS
-            options: { importLoaders: 1 }
+            options: {
+              importLoaders: 1,
+              sourceMap: true
+            }
           },
           {
-            loader: "postcss-loader" // translates CSS into CommonJS
+            loader: "postcss-loader", // translates CSS into CommonJS
+            options: {
+              plugins: () => [
+                require("postcss-import"),
+                require("postcss-preset-env")
+              ],
+              sourceMap: "true"
+            }
           },
           {
             loader: "sass-loader",
             options: {
               implementation: require("dart-sass"),
-              fiber: Fiber
+              fiber: Fiber,
+              sourceMap: true
             }
           }
         ]
@@ -62,7 +75,10 @@ module.exports = (env, argv) => ({
           {
             loader: "file-loader",
             options: {
-              name: "[name].[ext]",
+              name:
+                this.mode === "development"
+                  ? "[name]-[hash].[ext]"
+                  : "[name].[ext]",
               outputPath: "fonts/"
             }
           }
@@ -75,7 +91,10 @@ module.exports = (env, argv) => ({
           {
             loader: "file-loader",
             options: {
-              name: "[name].[ext]",
+              name:
+                this.mode === "development"
+                  ? "[name]-[hash].[ext]"
+                  : "[name].[ext]",
               outputPath: "images/"
             }
           }
@@ -85,10 +104,10 @@ module.exports = (env, argv) => ({
   },
   plugins: [
     new MiniCssExtractPlugin({
-      // Options similar to the same options in webpackOptions.output
-      // both options are optional
-      filename: "[name].css",
-      chunkFilename: "[id].css"
+      filename:
+        this.mode === "development" ? "[name].css" : "[name].[hash].css",
+      chunkFilename:
+        this.mode === "development" ? "[id].css" : "[id].[hash].css"
     })
   ]
 });
