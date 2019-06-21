@@ -4,7 +4,7 @@ const path = require("path");
 
 module.exports = () => ({
   entry: {
-    main: "./main.js"
+    main: [__dirname + "/index.html", "@babel/polyfill", "./main.js"]
   },
   resolve: {
     alias: {
@@ -22,8 +22,11 @@ module.exports = () => ({
   module: {
     rules: [
       {
-        test: /\.html/,
-        loader: "file-loader?name=[name].[ext]"
+        test: /\.(html)$/,
+        loader: "html-loader",
+        options: {
+          name: "[name].[ext]"
+        }
       },
       {
         test: /\.js$/,
